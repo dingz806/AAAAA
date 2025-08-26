@@ -1,0 +1,103 @@
+case "api_req_started":
+					{console.log("-------------------api_req_started---------", title?.props.children)}
+					return (
+						<>
+							<div
+								style={{
+									...headerStyle,
+									marginBottom:
+										(cost == null && apiRequestFailedMessage) || apiReqStreamingFailedMessage ? 10 : 0,
+									justifyContent: "space-between",
+									cursor: "pointer",
+									userSelect: "none",
+									WebkitUserSelect: "none",
+									MozUserSelect: "none",
+									msUserSelect: "none",
+								}}
+								onClick={onToggleExpand}>
+								<div
+									style={{
+										display: "flex",
+										alignItems: "center",
+										gap: "10px",
+									}}>
+									{icon}
+									{title}
+									{/* Need to render this every time since it affects height of row by 2px */}
+									<VSCodeBadge
+										style={{
+											opacity: cost != null && cost > 0 ? 1 : 0,
+										}}>
+										${Number(cost || 0)?.toFixed(4)}
+									</VSCodeBadge>
+								</div>
+								<span className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`}></span>
+
+							</div>
+							
+							{((cost == null && apiRequestFailedMessage) || apiReqStreamingFailedMessage) && (
+								<>
+									{(() => {
+										// Try to parse the error message as JSON for credit limit error
+										const errorData = parseErrorText(apiRequestFailedMessage)
+										if (errorData) {
+											if (
+												errorData.code === "insufficient_credits" &&
+												typeof errorData.current_balance === "number" &&
+												typeof errorData.total_spent === "number" &&
+												typeof errorData.total_promotions === "number" &&
+												typeof errorData.message === "string"
+											) {
+												return (
+													<CreditLimitError
+														currentBalance={errorData.current_balance}
+														totalSpent={errorData.total_spent}
+														totalPromotions={errorData.total_promotions}
+														message={errorData.message}
+													/>
+												)
+											}
+										}
+
+										// Default error display
+										return (
+											<p
+												style={{
+													...pStyle,
+													color: "var(--vscode-errorForeground)",
+												}}>
+												{apiRequestFailedMessage || apiReqStreamingFailedMessage}
+												{apiRequestFailedMessage?.toLowerCase().includes("powershell") && (
+													<>
+														<br />
+														<br />
+														It seems like you're having Windows PowerShell issues, please see this{" "}
+														<a
+															href="https://github.com/cline/cline/wiki/TroubleShooting-%E2%80%90-%22PowerShell-is-not-recognized-as-an-internal-or-external-command%22"
+															style={{
+																color: "inherit",
+																textDecoration: "underline",
+															}}>
+															troubleshooting guide
+														</a>
+														.
+													</>
+												)}
+											</p>
+										)
+									})()}
+								</>
+							)}
+
+							{isExpanded && (
+								<div style={{ marginTop: "10px" }}>
+									<CodeAccordian
+										code={JSON.parse(message.text || "{}").request}
+										language="markdown"
+										isExpanded={true}
+										onToggleExpand={onToggleExpand}
+									/>
+								</div>
+							)}
+						</>
+					)
